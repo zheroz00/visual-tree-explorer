@@ -5,6 +5,12 @@ export interface ExploreTreeParams {
   show_symbols?: boolean;    // Include symbol extraction (default: true)
   filter?: string;           // Glob pattern to filter files
   show_imports?: boolean;    // Show import analysis (default: false)
+  show_git_status?: boolean; // Show git status indicators (default: false)
+  search?: string;           // Search term to filter results
+  show_dependency_graph?: boolean; // Show dependency graph analysis (default: false)
+  show_performance?: boolean; // Show performance metrics per file (default: false)
+  icon_theme?: IconThemeName | 'custom'; // Icon theme to use (default: 'emoji')
+  custom_icons?: Partial<IconSet>; // Custom icon overrides
   max_files?: number;        // Limit files shown per directory
   skip_patterns?: string[];  // Patterns to skip (node_modules, etc.)
 }
@@ -18,6 +24,12 @@ export interface TreeNode {
   preview?: string[];
   symbols?: Symbol[];
   imports?: string[];
+  exports?: string[];
+  dependencies?: DependencyInfo[];
+  dependents?: string[];  // Files that depend on this file
+  gitStatus?: GitStatusInfo;
+  searchMatches?: SearchMatch[];
+  performance?: PerformanceMetrics;
   children?: TreeNode[];
   error?: string;
 }
@@ -48,6 +60,38 @@ export interface FileStats {
   mtime: Date;
 }
 
+export enum SearchMatchType {
+  FileName = 'filename',
+  SymbolName = 'symbol',
+  FileContent = 'content',
+  ImportPath = 'import'
+}
+
+export interface SearchMatch {
+  type: SearchMatchType;
+  text: string;
+  line?: number;
+  context?: string;
+}
+
+export enum GitStatus {
+  Modified = 'M',      // Modified
+  Added = 'A',         // Added to index
+  Deleted = 'D',       // Deleted
+  Renamed = 'R',       // Renamed
+  Copied = 'C',        // Copied
+  Untracked = '??',    // Untracked
+  Ignored = '!!',      // Ignored
+  Updated = 'U',       // Updated but unmerged
+  TypeChanged = 'T'    // File type changed
+}
+
+export interface GitStatusInfo {
+  status: GitStatus;
+  staged: boolean;     // Whether the change is staged
+  workingTree: boolean; // Whether there are working tree changes
+}
+
 // Default patterns to skip
 export const DEFAULT_SKIP_PATTERNS = [
   'node_modules',
@@ -62,3 +106,181 @@ export const DEFAULT_SKIP_PATTERNS = [
   'tmp',
   'temp'
 ];
+
+// Dependency Graph Types
+export interface DependencyInfo {
+  path: string;           // Import path as written in code
+  resolvedPath?: string;  // Actual file path if resolved
+  type: DependencyType;   // Type of dependency
+  imported?: string[];    // Specific items imported (named imports)
+  isExternal: boolean;    // Whether it's external (npm package) or internal
+}
+
+export enum DependencyType {
+  Import = 'import',           // ES6 import
+  Require = 'require',         // CommonJS require
+  DynamicImport = 'dynamic',   // Dynamic import()
+  TypeOnly = 'type'            // TypeScript type-only import
+}
+
+export interface DependencyGraph {
+  nodes: Map<string, DependencyNode>;  // File path -> Node info
+  edges: DependencyEdge[];             // Dependency relationships
+  clusters: ModuleCluster[];           // Grouped related modules
+  circularDependencies: CircularDependency[];
+  stats: DependencyStats;
+}
+
+export interface DependencyNode {
+  path: string;                   // File path
+  name: string;                   // File name
+  type: 'file' | 'external';     // Internal file or external package
+  exports: string[];              // Exported symbols
+  imports: DependencyInfo[];      // Import dependencies
+  dependents: string[];           // Files that depend on this
+  cluster?: string;               // Module cluster ID
+}
+
+export interface DependencyEdge {
+  from: string;        // Source file path
+  to: string;          // Target file path
+  type: DependencyType;
+  weight: number;      // Number of imports between files
+  imported?: string[]; // Specific symbols imported
+}
+
+export interface CircularDependency {
+  cycle: string[];     // Array of file paths in the cycle
+  length: number;      // Number of files in cycle
+  type: 'direct' | 'indirect';
+}
+
+export interface ModuleCluster {
+  id: string;                    // Cluster identifier
+  name: string;                  // Human readable name
+  files: string[];               // Files in this cluster
+  internalDependencies: number;  // Dependencies within cluster
+  externalDependencies: number;  // Dependencies outside cluster
+  cohesion: number;              // 0-1 score of how related files are
+}
+
+export interface DependencyStats {
+  totalFiles: number;
+  totalDependencies: number;
+  externalDependencies: number;
+  circularDependencies: number;
+  maxDepth: number;              // Longest dependency chain
+  avgDependenciesPerFile: number;
+  mostConnectedFile: string;     // File with most connections
+  leastConnectedFiles: string[]; // Files with no dependencies
+}
+
+// Performance Metrics Types
+export interface PerformanceMetrics {
+  total: TimingInfo;             // Total time to process this file
+  breakdown: OperationBreakdown; // Time breakdown by operation
+  memory: MemoryUsage;           // Memory usage during processing
+  fileInfo: FilePerformanceInfo; // File-specific performance characteristics
+}
+
+export interface TimingInfo {
+  startTime: number;    // Performance.now() when operation started
+  endTime: number;      // Performance.now() when operation ended
+  duration: number;     // Duration in milliseconds
+}
+
+export interface OperationBreakdown {
+  fileRead?: TimingInfo;        // Time to read file from disk
+  preview?: TimingInfo;         // Time to generate preview
+  symbolExtraction?: TimingInfo; // Time for AST parsing and symbol extraction
+  dependencyAnalysis?: TimingInfo; // Time for dependency analysis
+  gitStatus?: TimingInfo;       // Time to get git status
+  search?: TimingInfo;          // Time for search operations
+}
+
+export interface MemoryUsage {
+  beforeOperation: number;  // Memory usage before processing (MB)
+  afterOperation: number;   // Memory usage after processing (MB)
+  peakUsage: number;        // Peak memory usage during operation (MB)
+  delta: number;            // Memory delta for this operation (MB)
+}
+
+export interface FilePerformanceInfo {
+  fileSize: number;         // File size in bytes
+  lineCount: number;        // Number of lines in file
+  bytesPerMs: number;       // Processing throughput (bytes/ms)
+  linesPerMs: number;       // Processing throughput (lines/ms)
+  complexity: FileComplexity; // Estimated file complexity
+}
+
+export interface FileComplexity {
+  score: number;            // Complexity score (0-100)
+  factors: {
+    symbolCount: number;    // Number of symbols found
+    importCount: number;    // Number of imports
+    fileSize: number;       // Contribution from file size
+    nestingDepth: number;   // AST nesting depth
+  };
+}
+
+// Icon Theme Types
+export type IconThemeName = 'emoji' | 'minimal' | 'nerd-fonts' | 'ascii' | 'corporate';
+
+export interface IconSet {
+  // File and folder icons
+  folder: string;
+  file: string;
+  code: string;
+  
+  // Tree structure
+  branch: string;
+  lastBranch: string;
+  vertical: string;
+  
+  // Feature icons
+  symbols: string;
+  imports: string;
+  exports: string;
+  dependencies: string;
+  dependents: string;
+  preview: string;
+  search: string;
+  performance: string;
+  
+  // Git status
+  gitModified: string;
+  gitAdded: string;
+  gitDeleted: string;
+  gitUntracked: string;
+  gitRenamed: string;
+  
+  // Performance indicators
+  perfFast: string;      // Low complexity
+  perfMedium: string;    // Medium complexity
+  perfSlow: string;      // High complexity
+  perfCritical: string;  // Very high complexity
+  
+  // Search match types
+  searchFile: string;
+  searchSymbol: string;
+  searchContent: string;
+  searchImport: string;
+  
+  // Dependency types
+  depImport: string;
+  depRequire: string;
+  depDynamic: string;
+  depType: string;
+  
+  // Status indicators
+  error: string;
+  truncated: string;
+  loading: string;
+}
+
+export interface IconTheme {
+  name: IconThemeName;
+  displayName: string;
+  description: string;
+  icons: IconSet;
+}

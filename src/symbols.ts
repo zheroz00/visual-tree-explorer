@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { Symbol, SymbolKind } from './types.js';
+import { extractASTSymbols, shouldUseAST } from './ast-symbols.js';
 
 // Language-specific symbol patterns
 const SYMBOL_PATTERNS: Record<string, Array<{
@@ -48,6 +49,25 @@ const SYMBOL_PATTERNS: Record<string, Array<{
 };
 
 export async function extractSymbols(filePath: string): Promise<Symbol[]> {
+  // Try AST extraction first for TypeScript/JavaScript files
+  if (shouldUseAST(filePath)) {
+    try {
+      const astSymbols = await extractASTSymbols(filePath);
+      if (astSymbols.length > 0) {
+        // AST extraction successful, return results
+        return astSymbols.sort((a, b) => (a.line || 0) - (b.line || 0));
+      }
+    } catch (error) {
+      // AST extraction failed, fall back to regex
+      console.error(`AST extraction failed for ${filePath}, falling back to regex:`, error);
+    }
+  }
+  
+  // Fallback to regex-based extraction
+  return extractSymbolsWithRegex(filePath);
+}
+
+async function extractSymbolsWithRegex(filePath: string): Promise<Symbol[]> {
   const content = await fs.readFile(filePath, 'utf-8');
   const ext = path.extname(filePath).toLowerCase();
   const language = getLanguage(ext);

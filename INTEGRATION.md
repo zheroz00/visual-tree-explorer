@@ -22,25 +22,27 @@
      "mcpServers": {
        "visual-tree-explorer": {
          "command": "node",
-         "args": ["/absolute/path/to/yourProject/mcp-servers/visual-tree-explorer/dist/index.js"]
+         "args": ["/absolute/path/to/r3belMind/mcp-servers/visual-tree-explorer/dist/index.js"]
        }
      }
    }
    ```
 
-   Replace `/absolute/path/to/yourProject` with your actual project path.
+   Replace `/absolute/path/to/r3belMind` with your actual project path.
 
 4. **Restart Claude Desktop** to load the new MCP server.
 
 ## Verification
 
 Once integrated, you can test by asking Claude:
-- "Use explore_tree to show me the src/components directory"
-- "Show me the pipeline components with symbols"
+- "Use explore_tree to show me the src/components directory with git status"
+- "Show me the pipeline components with AST symbols"
+- "Search for all React components in the src directory"
 - "Explore the entire src directory with 3 levels deep"
 
 ## Example Usage in Conversations
 
+### Basic Exploration
 ```
 You: Show me what's in the components/pipeline folder with code previews
 
@@ -53,7 +55,37 @@ explore_tree({
   show_symbols: true
 })
 
-[Visual tree output with previews and symbols]
+[Visual tree output with AST symbols and previews]
+```
+
+### With Git Status
+```
+You: Show me modified files in the components directory
+
+Claude: I'll explore the components directory with git status indicators:
+
+explore_tree({
+  path: "src/components",
+  show_git_status: true,
+  show_symbols: true
+})
+
+[Output with 🟡 M, 🟢 A, ⚪ ?? indicators]
+```
+
+### Search Examples
+```
+You: Find all React components that use useState
+
+Claude: I'll search for components using useState:
+
+explore_tree({
+  path: "src",
+  search: "content:useState",
+  show_symbols: true
+})
+
+[Filtered results showing only files containing useState]
 ```
 
 ## Troubleshooting
@@ -70,7 +102,7 @@ For development, you can run the TypeScript directly:
   "mcpServers": {
     "visual-tree-explorer": {
       "command": "npx",
-      "args": ["tsx", "/path/to/yourProject/mcp-servers/visual-tree-explorer/src/index.ts"]
+      "args": ["tsx", "/path/to/r3belMind/mcp-servers/visual-tree-explorer/src/index.ts"]
     }
   }
 }

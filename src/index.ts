@@ -45,6 +45,35 @@ const EXPLORE_TREE_TOOL = {
         description: 'Show import statements (default: false)',
         default: false
       },
+      show_git_status: {
+        type: 'boolean',
+        description: 'Show git status indicators (default: false)',
+        default: false
+      },
+      show_dependency_graph: {
+        type: 'boolean',
+        description: 'Show dependency graph analysis with imports/exports/dependents (default: false)',
+        default: false
+      },
+      show_performance: {
+        type: 'boolean',
+        description: 'Show performance metrics per file (default: false)',
+        default: false
+      },
+      icon_theme: {
+        type: 'string',
+        enum: ['emoji', 'minimal', 'nerd-fonts', 'ascii', 'corporate'],
+        description: 'Icon theme to use (default: emoji)',
+        default: 'emoji'
+      },
+      custom_icons: {
+        type: 'object',
+        description: 'Custom icon overrides (object with icon names as keys)'
+      },
+      search: {
+        type: 'string',
+        description: 'Search term to filter results. Supports prefixes: function:, content:, import:, regex:'
+      },
       max_files: {
         type: 'number',
         description: 'Maximum files to show per directory (default: 100)',
@@ -106,7 +135,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // Format output based on requested format
     const output = args.format === 'json' 
       ? JSON.stringify(formatTreeJson(tree), null, 2)
-      : formatTree(tree);
+      : formatTree(tree, '', true, args.icon_theme, args.custom_icons);
     
     return {
       content: [
