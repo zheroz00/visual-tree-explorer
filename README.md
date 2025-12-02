@@ -83,6 +83,14 @@ Automatically skips: `node_modules`, `.git`, `dist`, `build`, `.next`, `out`, `c
 
 ```
 └── 📁 src (13 files)
+    ├── 📝 ast-symbols.ts (291 lines, 9.2KB)
+    │   ├── 👁️ Preview:
+    │   │   1: import { promises as fs } from 'fs';
+    │   │   2: import path from 'path';
+    │   ├── 🔷 Symbols:
+    │   │   ├── ASTSymbol (interface)
+    │   │   ├── extractASTSymbols (function) ✓ exported
+    │   │   ├── shouldUseAST (function) ✓ exported
     ├── 📝 explorer.ts (704 lines, 20.0KB)
     │   ├── 👁️ Preview:
     │   │   1: import { promises as fs, Stats } from 'fs';
@@ -91,24 +99,20 @@ Automatically skips: `node_modules`, `.git`, `dist`, `build`, `.next`, `out`, `c
     │   │   ├── validatePath (function)
     │   │   ├── exploreTree (function) ✓ exported
     │   │   ├── traverseDirectory (function)
-    ├── 📝 types.ts (326 lines, 9.7KB)
-    │   ├── 🔷 Symbols:
-    │   │   ├── ExploreTreeParams (interface) ✓ exported
-    │   │   ├── TreeNode (interface) ✓ exported
-    │   │   ├── VALIDATION_LIMITS (const) ✓ exported
+    │   │   └── ... (19 total)
+    └── 📝 types.ts (326 lines, 9.7KB)
+        ├── 🔷 Symbols:
+        │   ├── ExploreTreeParams (interface) ✓ exported
+        │   ├── TreeNode (interface) ✓ exported
+        │   ├── SymbolKind (enum) ✓ exported
+        │   └── ... (20 total)
 ```
 
 With `show_dependency_graph: true`:
 ```
-🕸️  37 files, 142 deps
+🕸️  13 files, 24 deps
 
-🌟 Most Connected: src/explorer.ts
-
-📦 2 module clusters
-   src: 13 files (85% cohesion)
-
-⚠️  1 circular dependency
-   src/a.ts → src/b.ts → src/a.ts
+🌟 Most Connected: explorer.ts
 ```
 
 ## Recent Updates (v1.1)
