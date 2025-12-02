@@ -36,6 +36,11 @@ function parseArgs(args: string[]): { mode: 'cli' | 'server'; params: Partial<Ex
       result.params.show_symbols = true;
     } else if (arg === '--no-symbols') {
       result.params.show_symbols = false;
+    } else if (arg === '--max-symbols' && args[i + 1]) {
+      result.params.max_symbols = parseInt(args[i + 1]);
+      i++;
+    } else if (arg === '--symbols-only-exported') {
+      result.params.symbols_only_exported = true;
     } else if (arg === '--show-imports') {
       result.params.show_imports = true;
     } else if (arg === '--show-git-status') {
@@ -88,6 +93,8 @@ CLI Options:
   --preview-lines <n>   Lines to preview per file (default: 5)
   --show-symbols        Extract code symbols (default: true)
   --no-symbols          Disable symbol extraction
+  --max-symbols <n>     Max symbols per file (default: 20)
+  --symbols-only-exported  Only show exported symbols
   --show-imports        Show import statements
   --show-git-status     Show git status indicators
   --show-dependency-graph Show dependency analysis
@@ -164,6 +171,8 @@ async function runServer(port: number = 8080) {
           depth: query.depth ? parseInt(query.depth as string) : 2,
           preview_lines: query.preview_lines ? parseInt(query.preview_lines as string) : 5,
           show_symbols: query.show_symbols !== 'false',
+          max_symbols: query.max_symbols ? parseInt(query.max_symbols as string) : undefined,
+          symbols_only_exported: query.symbols_only_exported === 'true',
           show_imports: query.show_imports === 'true',
           show_git_status: query.show_git_status === 'true',
           show_dependency_graph: query.show_dependency_graph === 'true',
