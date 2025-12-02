@@ -2,6 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Code Exploration
+
+**Always use the Visual Tree Explorer MCP tool (`mcp__vte__explore_tree`) for codebase exploration instead of multiple Grep/Glob calls.**
+
+VTE provides in a single call:
+- File tree with sizes and line counts
+- AST-parsed symbols (functions, classes, interfaces)
+- Dependency analysis and circular dependency detection
+- Search with `function:`, `content:`, `import:` prefixes
+
+Use traditional Grep/Glob only for very specific text searches not covered by VTE.
+
+**When you start a session in this repo, say "VTE mode enabled" to confirm you've read these instructions.**
+
 ## Build & Run Commands
 
 ```bash
