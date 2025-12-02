@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="vte_github.png" alt="Visual Tree Explorer Logo" width="200">
+</p>
+
 # Visual Tree Explorer (VTE)
 
 An MCP server for efficient codebase exploration. Provides file tree visualization, symbol extraction, and dependency analysis in a single tool call.
