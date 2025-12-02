@@ -4,14 +4,6 @@
       "type": "stdio",
       "command": "node",
       "args": [
-        "/mnt/dockerSSD/git/mcp/servers/vte/dist/index.js"
-      ],
-      "env": {}
-    },
-    "vte-old": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
         "/mnt/dockerSSD/git/mcp/servers/visual-tree-explorer/dist/index.js"
       ],
       "env": {}
