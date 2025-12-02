@@ -1,0 +1,12 @@
+/dist
+.env
+/node_modules
+.DS_Store
+npm-debug.log
+yarn-error.log
+.vscode/
+.idea/
+*.log
+*.swp
+*.swo
+gng435reJHFG3456gng
