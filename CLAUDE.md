@@ -4,13 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Code Exploration
 
-**Always use the Visual Tree Explorer MCP tool (`mcp__vte__explore_tree`) for codebase exploration instead of multiple Grep/Glob calls.**
+**Use VTE (`mcp__<server>__vte__explore_tree`) for code exploration** - tree + symbols + previews in one call.
 
-VTE provides in a single call:
-- File tree with sizes and line counts
-- AST-parsed symbols (functions, classes, interfaces)
-- Dependency analysis and circular dependency detection
-- Search with `function:`, `content:`, `import:` prefixes
 
 Use traditional Grep/Glob only for very specific text searches not covered by VTE.
 
