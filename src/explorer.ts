@@ -173,8 +173,23 @@ async function traverseDirectory(
   dirPath: string,
   options: TraverseOptions
 ): Promise<TreeNode> {
-  const stats = await fs.stat(dirPath);
   const name = path.basename(dirPath);
+
+  // Handle permission errors at directory level
+  let stats: Stats;
+  try {
+    stats = await fs.stat(dirPath);
+  } catch (error) {
+    const errCode = (error as NodeJS.ErrnoException).code;
+    const errorMsg = errCode === 'EACCES' ? 'Permission denied' : `Cannot access: ${errCode || error}`;
+    return {
+      name,
+      type: 'directory',
+      path: dirPath,
+      children: [],
+      error: errorMsg
+    };
+  }
 
   // Check if we should skip this directory
   if (shouldSkip(name, dirPath, options.skip_patterns)) {
@@ -200,12 +215,17 @@ async function traverseDirectory(
 
   // Check depth limit
   if (options.currentDepth >= options.depth) {
-    const entries = await fs.readdir(dirPath);
-    node.children = [{
-      name: `... ${entries.length} items`,
-      type: 'file',
-      path: ''
-    }];
+    try {
+      const entries = await fs.readdir(dirPath);
+      node.children = [{
+        name: `... ${entries.length} items`,
+        type: 'file',
+        path: ''
+      }];
+    } catch (error) {
+      const errCode = (error as NodeJS.ErrnoException).code;
+      node.error = errCode === 'EACCES' ? 'Permission denied' : `Cannot read: ${errCode || error}`;
+    }
     return node;
   }
 
@@ -274,7 +294,8 @@ async function traverseDirectory(
       }
     }
   } catch (error) {
-    node.error = `Failed to read directory: ${error}`;
+    const errCode = (error as NodeJS.ErrnoException).code;
+    node.error = errCode === 'EACCES' ? 'Permission denied' : `Cannot read directory: ${errCode || error}`;
   }
 
   // Filter results based on search if specified
