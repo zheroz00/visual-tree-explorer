@@ -92,7 +92,7 @@ export async function exploreTree(params: ExploreTreeParams): Promise<TreeNode> 
   );
 
   const {
-    show_symbols = true,
+    show_symbols = false,  // Default to false to reduce token usage
     symbols_only_exported = false,
     filter = undefined,
     show_imports = false,
@@ -232,6 +232,13 @@ async function traverseDirectory(
   // Read directory contents
   try {
     const entries = await fs.readdir(dirPath);
+
+    // Warn about large directories that may produce excessive output
+    const LARGE_DIR_THRESHOLD = 50;
+    if (entries.length > LARGE_DIR_THRESHOLD && options.currentDepth === 0) {
+      node.error = `Large directory: ${entries.length} items. Consider using 'filter' param or reducing 'depth'.`;
+    }
+
     const sortedEntries = entries.sort((a, b) => {
       // Directories first, then files
       const aPath = path.join(dirPath, a);

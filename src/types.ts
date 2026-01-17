@@ -2,7 +2,7 @@ export interface ExploreTreeParams {
   path: string;              // Starting directory
   depth?: number;            // How deep to traverse (default: 2, max: 10)
   preview_lines?: number;    // Lines to preview per file (default: 5, max: 50)
-  show_symbols?: boolean;    // Include symbol extraction (default: true)
+  show_symbols?: boolean;    // Include symbol extraction (default: false, opt-in to reduce tokens)
   symbols_only_exported?: boolean; // Only show exported symbols (default: false)
   max_symbols?: number;      // Max symbols per file (default: 20, max: 50)
   filter?: string;           // Glob pattern to filter files

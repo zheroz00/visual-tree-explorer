@@ -13,92 +13,117 @@ import { ExploreTreeParams } from './types.js';
 // Tool definition
 const EXPLORE_TREE_TOOL = {
   name: 'explore_tree',
-  description: 'Explore a directory tree with file previews and symbol extraction',
+  description: `Explore directory trees with file previews and optional code symbol extraction.
+Replaces multiple Glob/Grep/LS/Read calls with a single efficient operation.
+
+WHEN TO USE:
+- Initial codebase exploration ("what's in src/")
+- Finding files by pattern ("all .tsx components")
+- Understanding project structure before making changes
+- Locating functions/classes across files (with show_symbols)
+
+COMMON PATTERNS:
+1. Quick overview: { path: "/project/src", depth: 2 }
+2. Find components: { path: "/project/src", filter: "*.tsx", depth: 3 }
+3. Find a function: { path: "/project/src", show_symbols: true, search: "function:handleSubmit" }
+4. Shallow scan: { path: "/project", depth: 1 } - just top-level structure
+
+TOKEN OPTIMIZATION:
+- Default settings are optimized for low token output
+- show_symbols: false by default - enable only when you need function/class names
+- Use filter to limit to relevant file types (e.g., "*.{ts,tsx}" for TypeScript)
+- Use depth: 1 for large directories, then drill into specific subdirs
+- Binary files (.png, .mp3, etc.) are auto-detected and show "[Binary file: .ext]" instead of content
+
+WHEN NOT TO USE:
+- Reading a specific known file → use Read tool
+- Searching for text content across files → use Grep tool
+- You already know the exact file path → use Read tool directly`,
   inputSchema: {
     type: 'object',
     properties: {
       path: {
         type: 'string',
-        description: 'The directory path to explore'
+        description: 'The directory path to explore (required)'
       },
       depth: {
         type: 'number',
-        description: 'How deep to traverse the tree (default: 2, max: 10)',
+        description: 'Tree depth: 1=shallow overview, 2=default, 3+=deep dive. Max 10. Start shallow for large dirs.',
         default: 2
       },
-      preview_lines: {
-        type: 'number',
-        description: 'Number of lines to preview per file (default: 5, max: 50)',
-        default: 5
+      filter: {
+        type: 'string',
+        description: 'Glob pattern to filter files. Examples: "*.ts", "*.{ts,tsx}", "test-*.js", "**/*.spec.ts"'
       },
       show_symbols: {
         type: 'boolean',
-        description: 'Extract and show symbols from code files (default: true)',
-        default: true
+        description: 'Extract functions/classes/interfaces from code files. OFF by default to save tokens. Enable when you need to find specific functions or understand file APIs.',
+        default: false
+      },
+      search: {
+        type: 'string',
+        description: 'Filter results by search term. Prefixes: "function:name" (find function), "content:text" (in file content), "import:module" (find imports), "regex:pattern"'
+      },
+      preview_lines: {
+        type: 'number',
+        description: 'Lines of file content to preview (default: 5, max: 50). Set to 0 to disable previews.',
+        default: 5
       },
       symbols_only_exported: {
         type: 'boolean',
-        description: 'Only show exported symbols, reducing output size (default: false)',
+        description: 'When show_symbols is true, only show exported symbols (reduces noise)',
         default: false
       },
       max_symbols: {
         type: 'number',
-        description: 'Maximum symbols to show per file (default: 20, max: 50)',
+        description: 'Max symbols per file when show_symbols is true (default: 20, max: 50)',
         default: 20
-      },
-      filter: {
-        type: 'string',
-        description: 'Glob pattern to filter files (e.g., "*.ts")'
       },
       show_imports: {
         type: 'boolean',
-        description: 'Show import statements (default: false)',
+        description: 'Show import statements in each file (default: false)',
         default: false
       },
       show_git_status: {
         type: 'boolean',
-        description: 'Show git status indicators (default: false)',
+        description: 'Show git modified/staged indicators (default: false)',
         default: false
       },
       show_dependency_graph: {
         type: 'boolean',
-        description: 'Show dependency graph analysis with imports/exports/dependents (default: false)',
+        description: 'Show which files import/export what and who depends on them (default: false)',
         default: false
       },
       show_performance: {
         type: 'boolean',
-        description: 'Show performance metrics per file (default: false)',
+        description: 'Show file complexity metrics (default: false)',
         default: false
-      },
-      icon_theme: {
-        type: 'string',
-        enum: ['emoji', 'minimal', 'nerd-fonts', 'ascii', 'corporate'],
-        description: 'Icon theme to use (default: emoji)',
-        default: 'emoji'
-      },
-      custom_icons: {
-        type: 'object',
-        description: 'Custom icon overrides (object with icon names as keys)'
-      },
-      search: {
-        type: 'string',
-        description: 'Search term to filter results. Supports prefixes: function:, content:, import:, regex:'
       },
       max_files: {
         type: 'number',
-        description: 'Maximum files to show per directory (default: 100, max: 500)',
+        description: 'Max files per directory (default: 100, max: 500). Increase for large flat directories.',
         default: 100
       },
       skip_patterns: {
         type: 'array',
         items: { type: 'string' },
-        description: 'Patterns to skip (default includes node_modules, .git, dist, etc.)'
+        description: 'Additional patterns to skip. Default already skips: node_modules, .git, dist, build, coverage, __pycache__'
       },
       format: {
         type: 'string',
         enum: ['tree', 'json'],
-        description: 'Output format (default: tree)',
+        description: 'Output format: "tree" (visual, default) or "json" (structured)',
         default: 'tree'
+      },
+      icon_theme: {
+        type: 'string',
+        enum: ['emoji', 'minimal', 'nerd-fonts', 'ascii', 'corporate'],
+        description: 'Visual theme for icons (default: emoji)',
+        default: 'emoji'
+      },
+      custom_icons: {
+        type: 'object',
+        description: 'Override specific icons (advanced usage)'
       }
     },
     required: ['path']

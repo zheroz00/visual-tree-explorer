@@ -2,28 +2,66 @@ import { promises as fs } from 'fs';
 import { createReadStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import { Transform } from 'stream';
+import path from 'path';
 
 const MAX_LINE_LENGTH = 120;
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 
+// Binary file extensions - skip preview entirely for these
+const BINARY_EXTENSIONS = new Set([
+  // Images
+  '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.ico', '.webp', '.svg', '.tiff', '.tif', '.psd', '.ai', '.eps',
+  // Audio
+  '.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma', '.m4a', '.opus', '.aiff',
+  // Video
+  '.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpeg', '.mpg',
+  // Archives
+  '.zip', '.tar', '.gz', '.bz2', '.xz', '.7z', '.rar', '.iso',
+  // Documents (binary)
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp',
+  // Fonts
+  '.ttf', '.otf', '.woff', '.woff2', '.eot',
+  // Executables & compiled
+  '.exe', '.dll', '.so', '.dylib', '.bin', '.o', '.a', '.class', '.pyc', '.pyo',
+  // Database
+  '.db', '.sqlite', '.sqlite3', '.mdb',
+  // Other binary
+  '.wasm', '.map'
+]);
+
+/**
+ * Check if a file is binary based on extension.
+ * Returns true for known binary formats that shouldn't have text previews.
+ */
+export function isBinaryFile(filePath: string): boolean {
+  const ext = path.extname(filePath).toLowerCase();
+  return BINARY_EXTENSIONS.has(ext);
+}
+
 export async function getFilePreview(filePath: string, lines: number): Promise<string[]> {
+  // Skip binary files entirely - no preview needed
+  if (isBinaryFile(filePath)) {
+    const ext = path.extname(filePath).toLowerCase();
+    return [`[Binary file: ${ext}]`];
+  }
+
   const stats = await fs.stat(filePath);
-  
+
   // For large files, use streaming
   if (stats.size > MAX_FILE_SIZE) {
     return getFilePreviewStream(filePath, lines);
   }
-  
+
   // For smaller files, read directly
   try {
     const content = await fs.readFile(filePath, 'utf-8');
     const fileLines = content.split('\n');
-    
+
     return fileLines
       .slice(0, lines)
       .map((line, index) => {
         const lineNum = index + 1;
-        const truncated = line.length > MAX_LINE_LENGTH 
+        const truncated = line.length > MAX_LINE_LENGTH
           ? line.substring(0, MAX_LINE_LENGTH) + '...'
           : line;
         return `${lineNum}: ${truncated}`;

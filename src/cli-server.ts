@@ -91,7 +91,7 @@ CLI Options:
   --path <path>         Directory to explore (required in CLI mode)
   --depth <n>           Traverse depth (default: 2)
   --preview-lines <n>   Lines to preview per file (default: 5)
-  --show-symbols        Extract code symbols (default: true)
+  --show-symbols        Extract code symbols (default: false, opt-in to reduce tokens)
   --no-symbols          Disable symbol extraction
   --max-symbols <n>     Max symbols per file (default: 20)
   --symbols-only-exported  Only show exported symbols
